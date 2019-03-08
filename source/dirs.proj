@@ -1,0 +1,19 @@
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SolutionDir>$(MSBuildThisFileDirectory)</SolutionDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectFile Include="cmake_server\cmake_server.vcxproj"/>
+    <ProjectFile Include="driver\driver.vcxproj"/>
+  </ItemGroup>
+
+  <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+  <Target Name="Build">
+    <MSBuild Projects="@(ProjectFile)" Properties="SolutionDir=$(SolutionDir)" Targets="Build"/>
+  </Target>
+
+  <Target Name="Clean">
+    <MSBuild Projects="@(ProjectFile)" Properties="SolutionDir=$(SolutionDir)" Targets="Clean"/>
+  </Target>
+</Project>

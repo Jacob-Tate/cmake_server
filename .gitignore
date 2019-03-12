@@ -272,6 +272,7 @@ __pycache__/
 # cmake_server - Start
 ############################################################
 
+vcpkg/
 .vscode/
 *.code-workspace
 /build*/

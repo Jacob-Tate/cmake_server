@@ -2,15 +2,14 @@
 #include "cmake_server.h"
 #include <cstdio>
 #include <tchar.h>
-#include <stdio.h>
 #include <strsafe.h>
 
-HANDLE g_hChildStd_IN_Rd = NULL;
-HANDLE g_hChildStd_IN_Wr = NULL;
-HANDLE g_hChildStd_OUT_Rd = NULL;
-HANDLE g_hChildStd_OUT_Wr = NULL;
+HANDLE g_hChildStd_IN_Rd = nullptr;
+HANDLE g_hChildStd_IN_Wr = nullptr;
+HANDLE g_hChildStd_OUT_Rd = nullptr;
+HANDLE g_hChildStd_OUT_Wr = nullptr;
 
-HANDLE g_hInputFile = NULL;
+HANDLE g_hInputFile = nullptr;
 
 void CreateChildProcess(void);
 void WriteToPipe(void);
@@ -25,7 +24,7 @@ int entry_point(int argc, char* argv[])
 	// Set the bInheritHandle flag so pipe handles are inherited
 	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
 	saAttr.bInheritHandle = TRUE;
-	saAttr.lpSecurityDescriptor = NULL;
+	saAttr.lpSecurityDescriptor = nullptr;
 
 	// Create a pipe for the child process's stdout
 	if (!CreatePipe(&g_hChildStd_OUT_Rd, &g_hChildStd_OUT_Wr, &saAttr, 0))
@@ -55,10 +54,10 @@ int entry_point(int argc, char* argv[])
 		argv[1],
 		GENERIC_READ,
 		0,
-		NULL,
+		nullptr,
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_READONLY,
-		NULL
+		nullptr
 	);
 
 	if (g_hInputFile == INVALID_HANDLE_VALUE)
@@ -105,14 +104,14 @@ void CreateChildProcess(void)
 	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
 
 	// Create the child process
-	bSuccess = CreateProcess(NULL,
+	bSuccess = CreateProcess(nullptr,
 		szCmdline,
-		NULL,
-		NULL,
+		nullptr,
+		nullptr,
 		TRUE,
 		0,
-		NULL,
-		NULL,
+		nullptr,
+		nullptr,
 		&siStartInfo,
 		&piProcInfo);
 
@@ -136,10 +135,10 @@ void WriteToPipe(void)
 
 	for (;;)
 	{
-		bSuccess = ReadFile(g_hInputFile, chBuf, BUFSIZ, &dwRead, NULL);
+		bSuccess = ReadFile(g_hInputFile, chBuf, BUFSIZ, &dwRead, nullptr);
 		if (!bSuccess || dwRead == 0) break;
 
-		bSuccess = WriteFile(g_hChildStd_IN_Wr, chBuf, dwRead, &dwWritten, NULL);
+		bSuccess = WriteFile(g_hChildStd_IN_Wr, chBuf, dwRead, &dwWritten, nullptr);
 		if (!bSuccess) break;
 	}
 
@@ -156,15 +155,15 @@ void ReadFromPipe(void)
 	DWORD dwRead, dwWritten;
 	CHAR chBuf[BUFSIZ];
 	BOOL bSuccess = FALSE;
-	HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	const HANDLE hParentStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
 	for (;;)
 	{
-		bSuccess = ReadFile(g_hChildStd_OUT_Rd, chBuf, BUFSIZ, &dwRead, NULL);
+		bSuccess = ReadFile(g_hChildStd_OUT_Rd, chBuf, BUFSIZ, &dwRead, nullptr);
 		if (!bSuccess || dwRead == 0) break;
 
 		bSuccess = WriteFile(hParentStdOut, chBuf,
-			dwRead, &dwWritten, NULL);
+			dwRead, &dwWritten, nullptr);
 		if (!bSuccess) break;
 	}
 }
@@ -175,25 +174,25 @@ void ErrorExit(const char* lpszFunction)
 	// and exit from the application.
 	LPVOID lpMsgBuf;
 	LPVOID lpDisplayBuf;
-	DWORD dw = GetLastError();
+	const DWORD dw = GetLastError();
 
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER |
 		FORMAT_MESSAGE_FROM_SYSTEM |
 		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
+		nullptr,
 		dw,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPTSTR)&lpMsgBuf,
-		0, NULL);
+		reinterpret_cast<LPTSTR>(&lpMsgBuf),
+		0, nullptr);
 
-	lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
-		(lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
-	StringCchPrintf((LPTSTR)lpDisplayBuf,
+	lpDisplayBuf = static_cast<LPVOID>(LocalAlloc(LMEM_ZEROINIT,(lstrlen(static_cast<LPCTSTR>(lpMsgBuf)) + lstrlen(static_cast<LPCTSTR>(lpszFunction)) + 40) * sizeof(TCHAR)));
+
+	StringCchPrintf(static_cast<LPTSTR>(lpDisplayBuf),
 		LocalSize(lpDisplayBuf) / sizeof(TCHAR),
 		TEXT("%s failed with error %d: %s"),
 		lpszFunction, dw, lpMsgBuf);
-	MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+	MessageBox(nullptr, static_cast<LPCTSTR>(lpDisplayBuf), TEXT("Error"), MB_OK);
 
 	LocalFree(lpMsgBuf);
 	LocalFree(lpDisplayBuf);
